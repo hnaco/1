@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - '.github/workflows/package-whisper-model.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/package-whisper-model.yml'
   workflow_dispatch:
 
 permissions:
