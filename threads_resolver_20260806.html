@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Threads resolver loading</title>
+<style>body{font:15px/1.5 ui-monospace,monospace;white-space:pre-wrap;margin:20px}pre{white-space:pre-wrap;word-break:break-word}</style>
+<pre id="out">Loading Threads data…</pre>
+<script>
+(async()=>{
+  const out=document.getElementById('out');
+  try{
+    const variables={
+      check_for_unavailable_replies:true,
+      first:50,
+      postID:'3959854561569755567',
+      __relay_internal__pv__BarcelonaIsLoggedInrelayprovider:true,
+      __relay_internal__pv__BarcelonaIsThreadContextHeaderEnabledrelayprovider:false,
+      __relay_internal__pv__BarcelonaIsThreadContextHeaderFollowButtonEnabledrelayprovider:false,
+      __relay_internal__pv__BarcelonaUseCometVideoPlaybackEnginerelayprovider:false,
+      __relay_internal__pv__BarcelonaOptionalCookiesEnabledrelayprovider:false,
+      __relay_internal__pv__BarcelonaIsViewCountEnabledrelayprovider:false,
+      __relay_internal__pv__BarcelonaShouldShowFediverseM075Featuresrelayprovider:false
+    };
+    const lsd='hgmSkqDnLNFckqa7t1vJdn';
+    const body=new URLSearchParams({variables:JSON.stringify(variables),doc_id:'7448594591874178',lsd});
+    const proxy='https://corsproxy.io/?url='+encodeURIComponent('https://www.threads.com/api/graphql');
+    const res=await fetch(proxy,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-Fb-Lsd':lsd,'X-Ig-App-Id':'238260118697367'},body});
+    const raw=await res.text();
+    let payload;
+    try{payload=JSON.parse(raw)}catch(e){throw new Error('HTTP '+res.status+' non-JSON: '+raw.slice(0,1000))}
+    if(payload.errors) throw new Error(JSON.stringify(payload.errors));
+    const edges=payload?.data?.data?.edges||[];
+    const seen=new Set(), posts=[];
+    for(const edge of edges){
+      for(const item of (edge?.node?.thread_items||[])){
+        const p=item?.post;
+        if(!p?.code||seen.has(p.code)) continue;
+        seen.add(p.code);
+        posts.push({code:p.code,username:p.user?.username||'',text:p.caption?.text||'',likes:p.like_count||0,replies:p.text_post_app_info?.direct_reply_count||0});
+      }
+    }
+    const authorPosts=posts.filter(p=>p.username==='vincentyucw');
+    document.title='Threads resolver READY';
+    out.textContent=JSON.stringify({httpStatus:res.status,edgeCount:edges.length,totalPosts:posts.length,authorPosts,allPosts:posts},null,2);
+  }catch(err){
+    document.title='Threads resolver ERROR';
+    out.textContent='ERROR\n'+(err?.stack||String(err));
+  }
+})();
+</script>
